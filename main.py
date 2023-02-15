@@ -104,45 +104,43 @@ def makeSortMapping(items: list[T], key: Callable[[T], S], default: S = 0) -> li
         sort_mapping[vi[1]] = i
     return sort_mapping
 
-def getCurrentIndex(corrections: list[tuple[int, int]], i: int) -> int:
+Diff = list[tuple[int, int, int]]
+
+def getCurrentIndex(corrections: Diff, i: int) -> int:
     current_i = i
-    for left, right in corrections:
+    for _, left, right in corrections:
         if current_i == left:
             current_i = right
         else:
             current_i += (right <= current_i) * (current_i < left) - (left < current_i) * (current_i <= right)
     return current_i
 
-def makeYtSortDiff(items: list[T], key: Callable[[T], S], default: S = 0) -> list[tuple[int, int]]:
-    diff: list[tuple[int, int]] = []
-    corrections: list[tuple[int, int]] = []
+def makeYtSortDiff(items: list[T], key: Callable[[T], S], default: S = 0) -> Diff:
+    corrections: Diff = []
     sort_mapping = makeSortMapping(items, key, default)
     for i in range(len(items)):
         current_i = getCurrentIndex(corrections, i)
         if current_i != sort_mapping[i]:
-            diff.append((i, sort_mapping[i]))
-            corrections.append((current_i, sort_mapping[i]))
-    return diff
+            corrections.append((i, current_i, sort_mapping[i]))
+    return corrections
 
-def makeOptimalYtSortDiff(items: list[T], key: Callable[[T], S], default: S = 0) -> list[tuple[int, int]]:
-    diff: list[tuple[int, int]] = []
-    corrections: list[tuple[int, int]] = []
+def makeOptimalYtSortDiff(items: list[T], key: Callable[[T], S], default: S = 0) -> Diff:
+    corrections: Diff = []
     sort_mapping = makeSortMapping(items, key, default)
     for i in range(len(items)):
         max_offset = 0
         max_offset_i = -1
+        max_offset_current_i = -1
         for i in range(len(items)):
             current_i = getCurrentIndex(corrections, i)
             offset = current_i - sort_mapping[i]
             if abs(offset) > max_offset:
                 max_offset = offset
                 max_offset_i = i
+                max_offset_current_i = current_i
         if max_offset_i == -1: break
-        i = max_offset_i
-        current_i = getCurrentIndex(corrections, i)
-        diff.append((i, sort_mapping[i]))
-        corrections.append((current_i, sort_mapping[i]))
-    return diff
+        corrections.append((max_offset_i, max_offset_current_i, sort_mapping[i]))
+    return corrections
 
 def sortPlaylistBy(playlistId: str, key: Callable, default: S = 0):
     items = getPlaylistItems(playlistId)
@@ -150,8 +148,8 @@ def sortPlaylistBy(playlistId: str, key: Callable, default: S = 0):
     print(f"diff: {len(diff)}")
     optimal_diff = makeOptimalYtSortDiff(items, key, default)
     print(f"optimal_diff: {len(optimal_diff)}")
-    for i, j in diff:
-        ... #setPlaylistItemPosition(items[i], j)
+    for i, current_i, desired_i in optimal_diff:
+        setPlaylistItemPosition(items[i], desired_i)
 
 if __name__ == "__main__":
     #items = getPlaylistItems("PLei7IY8RpepxpqY5MjG4Jt_valumlC2Aq")
