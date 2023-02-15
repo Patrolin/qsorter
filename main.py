@@ -1,6 +1,6 @@
 from .common import *
 from .yt_wrapper import *
-from .yt_diff import makeYtSortDiff
+from .yt_diff import makeYtSortDiff, S
 from typing import Callable
 from sys import argv
 
