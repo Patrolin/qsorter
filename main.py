@@ -144,10 +144,6 @@ def makeOptimalYtSortDiff(items: list[T], key: Callable[[T], S], default: S = 0)
         corrections.append((current_i, sort_mapping[i]))
     return diff
 
-#items = getPlaylistItems("PLei7IY8RpepxpqY5MjG4Jt_valumlC2Aq")
-#log(items)
-#setPlaylistItemPosition(items[2], 0)
-
 def sortPlaylistBy(playlistId: str, key: Callable, default: S = 0):
     items = getPlaylistItems(playlistId)
     diff = makeYtSortDiff(items, key, default)
@@ -157,4 +153,8 @@ def sortPlaylistBy(playlistId: str, key: Callable, default: S = 0):
     for i, j in diff:
         ... #setPlaylistItemPosition(items[i], j)
 
-sortPlaylistBy(argv[1], lambda item: get(item, "snippet.videoOwnerChannelTitle"), "")
+if __name__ == "__main__":
+    #items = getPlaylistItems("PLei7IY8RpepxpqY5MjG4Jt_valumlC2Aq")
+    #log(items)
+    #setPlaylistItemPosition(items[2], 0)
+    sortPlaylistBy(argv[1], lambda item: get(item, "snippet.videoOwnerChannelTitle"), "")
