@@ -92,8 +92,9 @@ def setPlaylistItemPosition(item, position: int):
     return response
 
 T = TypeVar("T")
+S = TypeVar("S", int, str)
 
-def makeSortMapping(items: list[T], key: Callable[[T], int], default: Any = 0) -> list[int]:
+def makeSortMapping(items: list[T], key: Callable[[T], S], default: S = 0) -> list[int]:
     items_with_index = [(v, i) for i, v in enumerate(items)]
     sorted_items_with_index = sorted(items_with_index,
                                      key=lambda vi: key(vi[0])
@@ -103,28 +104,57 @@ def makeSortMapping(items: list[T], key: Callable[[T], int], default: Any = 0) -
         sort_mapping[vi[1]] = i
     return sort_mapping
 
-def makeYtSortDiff(items: list[T], key: Callable[[T], int], default) -> list[tuple[int, int]]:
+def getCurrentIndex(corrections: list[tuple[int, int]], i: int) -> int:
+    current_i = i
+    for left, right in corrections:
+        if current_i == left:
+            current_i = right
+        else:
+            current_i += (right <= current_i) * (current_i < left) - (left < current_i) * (current_i <= right)
+    return current_i
+
+def makeYtSortDiff(items: list[T], key: Callable[[T], S], default: S = 0) -> list[tuple[int, int]]:
     diff: list[tuple[int, int]] = []
     corrections: list[tuple[int, int]] = []
     sort_mapping = makeSortMapping(items, key, default)
     for i in range(len(items)):
-        current_i = i
-        for left, right in corrections:
-            current_i += (right <= current_i) * (current_i < left) - (left < current_i) * (current_i <= right)
+        current_i = getCurrentIndex(corrections, i)
         if current_i != sort_mapping[i]:
             diff.append((i, sort_mapping[i]))
             corrections.append((current_i, sort_mapping[i]))
+    return diff
+
+def makeOptimalYtSortDiff(items: list[T], key: Callable[[T], S], default: S = 0) -> list[tuple[int, int]]:
+    diff: list[tuple[int, int]] = []
+    corrections: list[tuple[int, int]] = []
+    sort_mapping = makeSortMapping(items, key, default)
+    for i in range(len(items)):
+        max_offset = 0
+        max_offset_i = -1
+        for i in range(len(items)):
+            current_i = getCurrentIndex(corrections, i)
+            offset = current_i - sort_mapping[i]
+            if abs(offset) > max_offset:
+                max_offset = offset
+                max_offset_i = i
+        if max_offset_i == -1: break
+        i = max_offset_i
+        current_i = getCurrentIndex(corrections, i)
+        diff.append((i, sort_mapping[i]))
+        corrections.append((current_i, sort_mapping[i]))
     return diff
 
 #items = getPlaylistItems("PLei7IY8RpepxpqY5MjG4Jt_valumlC2Aq")
 #log(items)
 #setPlaylistItemPosition(items[2], 0)
 
-def sortPlaylistBy(playlistId: str, key: Callable, default: Any = 0):
+def sortPlaylistBy(playlistId: str, key: Callable, default: S = 0):
     items = getPlaylistItems(playlistId)
     diff = makeYtSortDiff(items, key, default)
-    print(f"diff: {diff}")
+    print(f"diff: {len(diff)}")
+    optimal_diff = makeOptimalYtSortDiff(items, key, default)
+    print(f"optimal_diff: {len(optimal_diff)}")
     for i, j in diff:
-        setPlaylistItemPosition(items[i], j)
+        ... #setPlaylistItemPosition(items[i], j)
 
 sortPlaylistBy(argv[1], lambda item: get(item, "snippet.videoOwnerChannelTitle"), "")
