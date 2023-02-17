@@ -4,7 +4,8 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.http import HttpRequest
 from typing import Protocol, cast, Any
-from .common import *
+from common import *
+from common import _get_step
 
 youtube: Any = None
 
