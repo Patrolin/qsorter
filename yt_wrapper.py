@@ -25,6 +25,7 @@ def build_youtube_api(oauth: bool):
         flow.run_local_server(timeout_seconds=300)
         credentials = flow.credentials
         print(f"credentials: {credentials}")
+        # TODO: store credentials in file?
 
     # https://github.com/googleapis/google-api-python-client/blob/main/docs/dyn/index.md
     youtube = build("youtube", "v3", developerKey=BASIC_YOUTUBE_KEY, credentials=credentials)
