@@ -51,7 +51,7 @@ def getPlaylistItems(playlistId: str, maxResults=50, **kwargs):
     pageToken = None
     while True:
         response = request("playlistItems.list",
-                           part="id,snippet,status",
+                           part="id,snippet,status,contentDetails",
                            playlistId=playlistId,
                            maxResults=maxResults,
                            **kwargs,
@@ -59,7 +59,6 @@ def getPlaylistItems(playlistId: str, maxResults=50, **kwargs):
         items.extend(response["items"])
         pageToken = getOrNone(response, "nextPageToken")
         if pageToken == None: break
-    log(items)
     return items
 
 def setPlaylistItemPosition(item, position: int):
