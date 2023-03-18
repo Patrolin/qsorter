@@ -45,10 +45,14 @@ def request(path: str, part: str, **kwargs) -> Any:
     api = cast(GoogleFetch, cursed_get(youtube, path))
     return api(part=part, **kwargs).execute()
 
+_playlists: dict[str, list] = dict()
+
 # bindings
 def getPlaylistItems(playlistId: str, maxResults=50, **kwargs):
     items = []
     pageToken = None
+    if playlistId in _playlists:
+        return _playlists[playlistId]
     while True:
         response = request("playlistItems.list",
                            part="id,snippet,status,contentDetails",
@@ -59,6 +63,7 @@ def getPlaylistItems(playlistId: str, maxResults=50, **kwargs):
         items.extend(response["items"])
         pageToken = getOrNone(response, "nextPageToken")
         if pageToken == None: break
+    _playlists[playlistId] = items
     return items
 
 def setPlaylistItemPosition(item, position: int):

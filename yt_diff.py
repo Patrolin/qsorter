@@ -54,8 +54,8 @@ class Node(NamedTuple):
 
 Diff = list[tuple[int, int, int]]
 
-def makeYtSortDiff(items: list[T], key: Callable[[T], S], default: S = 0) -> Diff:
-    start = makeSortMapping(items, key, default)
+def makeYtSortDiff(items: list[T], key: Callable[[T], S]) -> Diff:
+    start = makeSortMapping(items, key)
     path = [Node(-1, start)]
     while not path[-1].isSorted():
         neighbor = path[-1].sortNeighbor()
@@ -70,11 +70,12 @@ def makeYtSortDiff(items: list[T], key: Callable[[T], S], default: S = 0) -> Dif
         diff.append((i, current_i, desired_i))
     return diff
 
-def makeSortMapping(items: list[T], key: Callable[[T], S], default: S = 0) -> SortMappingTuple:
+def isVideoPrivate(item) -> bool:
+    return getOrNone(item, "status.privacyStatus") in ["privacyStatusUnspecified", "private"]
+
+def makeSortMapping(items: list[T], key: Callable[[T], S]) -> SortMappingTuple:
     items_with_index = [(v, i) for i, v in enumerate(items)]
-    sorted_items_with_index = sorted(items_with_index,
-                                     key=lambda vi: key(vi[0])
-                                     if getOrNone(vi[0], "status.privacyStatus") not in ["privacyStatusUnspecified"] else default)
+    sorted_items_with_index = sorted(items_with_index, key=lambda vi: key(vi[0]))
     sort_mapping = [0] * len(items)
     for desired_i, vi in enumerate(sorted_items_with_index):
         sort_mapping[vi[1]] = desired_i
